@@ -1,0 +1,109 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "afxres.h"
+
+/////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+/////////////////////////////////////////////////////////////////////////////
+// Russian resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_RUS)
+#ifdef _WIN32
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+#pragma code_page(1251)
+#endif //_WIN32
+
+#ifdef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE 
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE 
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE 
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_SERVER DIALOGEX 0, 0, 456, 354
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Server"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LISTBOX         IDC_CLIENT_LIST,7,16,93,331,LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Clients:",IDC_LBL_CLIENTS,7,7,25,8
+    LTEXT           "Local computer:",IDC_LBL_LOCAL_COMPUTER,102,7,52,8
+    EDITTEXT        IDC_LOCAL_PATH,101,16,348,14,ES_AUTOHSCROLL
+    LTEXT           "Remote computer:",IDC_LBL_REMOTE_COMPUTER,101,174,60,8
+    CONTROL         "",IDC_REMOTE_COMPUTER,"SysListView32",LVS_NOCOLUMNHEADER | WS_TABSTOP,101,198,348,134,WS_EX_CLIENTEDGE
+    EDITTEXT        IDC_REMOTE_PATH,101,184,348,14,ES_AUTOHSCROLL
+    PUSHBUTTON      "^",IDC_DOWNLOAD,190,167,50,14
+    PUSHBUTTON      "v",IDC_LOAD,278,167,50,14
+    CONTROL         "",IDC_LOCAL_COMPUTER,"SysListView32",LVS_NOCOLUMNHEADER | WS_TABSTOP,101,30,348,134,WS_EX_CLIENTEDGE
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,101,333,348,14
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO 
+BEGIN
+    IDD_SERVER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 449
+        VERTGUIDE, 101
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 347
+        HORZGUIDE, 16
+        HORZGUIDE, 30
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+#endif    // Russian resources
+/////////////////////////////////////////////////////////////////////////////
+
+
+
+#ifndef APSTUDIO_INVOKED
+/////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+
+/////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED
+

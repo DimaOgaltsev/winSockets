@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "winSockets", "winSockets\winSockets.vcproj", "{C6D0E87D-E387-4B5B-B60C-80D8D16D4434}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "server\server.vcproj", "{DCFCE185-229C-4043-B11A-FDCE415FFD0D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C6D0E87D-E387-4B5B-B60C-80D8D16D4434} = {C6D0E87D-E387-4B5B-B60C-80D8D16D4434}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "client", "client\client.vcproj", "{0424B309-A35F-4813-9A86-3EEEA9F55D61}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C6D0E87D-E387-4B5B-B60C-80D8D16D4434} = {C6D0E87D-E387-4B5B-B60C-80D8D16D4434}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "mail_client", "mail_client\mail_client.vcproj", "{FEF53979-CB47-4F39-B279-A93F4E49EA30}"
+	ProjectSection(ProjectDependencies) = postProject
+		{C6D0E87D-E387-4B5B-B60C-80D8D16D4434} = {C6D0E87D-E387-4B5B-B60C-80D8D16D4434}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{C6D0E87D-E387-4B5B-B60C-80D8D16D4434}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C6D0E87D-E387-4B5B-B60C-80D8D16D4434}.Debug|Win32.Build.0 = Debug|Win32
+		{C6D0E87D-E387-4B5B-B60C-80D8D16D4434}.Release|Win32.ActiveCfg = Release|Win32
+		{C6D0E87D-E387-4B5B-B60C-80D8D16D4434}.Release|Win32.Build.0 = Release|Win32
+		{DCFCE185-229C-4043-B11A-FDCE415FFD0D}.Debug|Win32.ActiveCfg = Debug|Win32
+		{DCFCE185-229C-4043-B11A-FDCE415FFD0D}.Debug|Win32.Build.0 = Debug|Win32
+		{DCFCE185-229C-4043-B11A-FDCE415FFD0D}.Release|Win32.ActiveCfg = Release|Win32
+		{DCFCE185-229C-4043-B11A-FDCE415FFD0D}.Release|Win32.Build.0 = Release|Win32
+		{0424B309-A35F-4813-9A86-3EEEA9F55D61}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0424B309-A35F-4813-9A86-3EEEA9F55D61}.Debug|Win32.Build.0 = Debug|Win32
+		{0424B309-A35F-4813-9A86-3EEEA9F55D61}.Release|Win32.ActiveCfg = Release|Win32
+		{0424B309-A35F-4813-9A86-3EEEA9F55D61}.Release|Win32.Build.0 = Release|Win32
+		{FEF53979-CB47-4F39-B279-A93F4E49EA30}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FEF53979-CB47-4F39-B279-A93F4E49EA30}.Debug|Win32.Build.0 = Debug|Win32
+		{FEF53979-CB47-4F39-B279-A93F4E49EA30}.Release|Win32.ActiveCfg = Release|Win32
+		{FEF53979-CB47-4F39-B279-A93F4E49EA30}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
