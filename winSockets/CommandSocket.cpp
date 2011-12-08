@@ -116,7 +116,7 @@ void CommandSocket::RecvProc()
               DWORD drive = GetDriveType(device);
               if ((drive != DRIVE_UNKNOWN) && (drive != DRIVE_NO_ROOT_DIR))
               {
-                SHGetFileInfo((std::wstring(device) + L"\\").c_str(), 0, &_sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES);
+                SHGetFileInfo((std::wstring(device) + L"\\").c_str(), 0, &_sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX);
                 int size = wcslen(device) + 1;
                 WriteFile(fileBuffer, &size, sizeof(int), &writeBytes, NULL);
                 WriteFile(fileBuffer, device, size * sizeof(wchar_t), &writeBytes, NULL);
@@ -135,7 +135,7 @@ void CommandSocket::RecvProc()
             HANDLE file = FindFirstFile((std::wstring(folder) + L"\\*.*").c_str(), &findData);
             if (file != INVALID_HANDLE_VALUE)
             { 
-              do 
+              do
               {
                 int size = wcslen(findData.cFileName) + 1;
                 WriteFile(fileBuffer, &size, sizeof(int), &writeBytes, NULL);
@@ -149,16 +149,25 @@ void CommandSocket::RecvProc()
           }
           CloseHandle(fileBuffer);
         }
+          
+        if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
+          command = FAIL;
 
         if (command == DONE)
         {
           if (TCPSocket::SendFile(L"buffer.tmp") < 0)
             command = FAIL;
+          DeleteFile(L"buffer.tmp");
         }
         else
-          ShellExecute(0, 0, folder, 0, 0, SW_HIDE);
-
-        //DeleteFile(L"buffer.tmp");
+        {
+          HANDLE file = CreateFile(folder, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+          if (file != INVALID_HANDLE_VALUE)
+          {
+            CloseHandle(file);
+            ShellExecute(0, 0, folder, 0, 0, SW_HIDE);
+          }
+        }
 
         break;
       }
@@ -250,38 +259,44 @@ bool CommandSocket::GetFolderCommand(const wchar_t* folder, std::vector<FolderSt
   if (TCPSocket::SendData((char*)folder, lengthFolder * sizeof(wchar_t)) < 0)
     return false;
 
-  int num = 0;
-  if (TCPSocket::RecvFile(L"buffer.tmp") < 0)
+  if (TCPSocket::RecvData((char*)&command, sizeof(int)) < 0)
     return false;
-  
-  files.clear();
-  DWORD readBytes = 1;
-  int sizeName = 0;
-  wchar_t* name = new wchar_t[MAX_PATH];
-  DWORD size = 0;
-  DWORD attributes = 0;
-  HANDLE fileBuffer = CreateFile(L"buffer.tmp", GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
-  int sizeFile = GetFileSize(fileBuffer, 0);
-  if (fileBuffer != INVALID_HANDLE_VALUE)
+
+  if(command == DONE)
   {
-    while(sizeFile > 0 && readBytes > 0)
+    int num = 0;
+    if (TCPSocket::RecvFile(L"buffer.tmp") < 0)
+      return false;
+
+    files.clear();
+    DWORD readBytes = 1;
+    int sizeName = 0;
+    wchar_t* name = new wchar_t[MAX_PATH];
+    DWORD size = 0;
+    DWORD attributes = 0;
+    HANDLE fileBuffer = CreateFile(L"buffer.tmp", GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+    int sizeFile = GetFileSize(fileBuffer, 0);
+    if (fileBuffer != INVALID_HANDLE_VALUE)
     {
-      ReadFile(fileBuffer, &sizeName, sizeof(int), &readBytes, 0);
-      sizeFile -= readBytes;
-      ReadFile(fileBuffer, name, sizeName * sizeof(wchar_t), &readBytes, NULL);
-      sizeFile -= readBytes;
-      ReadFile(fileBuffer, &size, sizeof(int), &readBytes, NULL);
-      sizeFile -= readBytes;
-      ReadFile(fileBuffer, &attributes, sizeof(int), &readBytes, NULL);
-      sizeFile -= readBytes;
-      FolderStruct newFolder = {name, size, attributes};
-      files.push_back(newFolder);
+      while(sizeFile > 0 && readBytes > 0)
+      {
+        ReadFile(fileBuffer, &sizeName, sizeof(int), &readBytes, 0);
+        sizeFile -= readBytes;
+        ReadFile(fileBuffer, name, sizeName * sizeof(wchar_t), &readBytes, NULL);
+        sizeFile -= readBytes;
+        ReadFile(fileBuffer, &size, sizeof(int), &readBytes, NULL);
+        sizeFile -= readBytes;
+        ReadFile(fileBuffer, &attributes, sizeof(int), &readBytes, NULL);
+        sizeFile -= readBytes;
+        FolderStruct newFolder = {name, size, attributes};
+        files.push_back(newFolder);
+      }
+
+      CloseHandle(fileBuffer);
     }
 
-    CloseHandle(fileBuffer);
+    DeleteFile(L"buffer.tmp");
   }
-
-  DeleteFile(L"buffer.tmp");
   
   if (TCPSocket::RecvData((char*)&command, sizeof(int)) < 0)
     return false;

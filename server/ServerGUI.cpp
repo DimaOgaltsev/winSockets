@@ -368,15 +368,7 @@ void ServerGUI::AddListItem(HWND list, const wchar_t* text)
     item.iItem = num;
     ListView_GetItem(list, &item);
 
-    if (_sfi.iIcon != 10 &&       //папки
-        item.iImage != 10 &&      //и с папками
-        item.iImage > _sfi.iIcon) //не сравниваем
-    {
-      if (item.iImage != _sfi.iIcon)
-        break;
-    }
-
-    if (_sfi.iIcon == 10 && item.iImage != 10)
+    if (item.iImage > _sfi.iIcon)
       break;
 
     if (item.iImage == _sfi.iIcon && wcscmp(item.pszText, text) > 0)
@@ -413,7 +405,7 @@ void ServerGUI::OpenLocalFile(const wchar_t* path, bool openfile)
       if ((drive != DRIVE_UNKNOWN) && (drive != DRIVE_NO_ROOT_DIR))
       {
         filename = device;
-        SHGetFileInfo((filename + L"\\").c_str(), 0, &_sfi, sizeof(SHFILEINFO), SHGFI_ICON | SHGFI_SYSICONINDEX);
+        SHGetFileInfo((filename + L"\\").c_str(), 0, &_sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX);
         AddListItem(_localList, filename.c_str());
       }
     }
