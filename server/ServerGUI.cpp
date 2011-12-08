@@ -135,12 +135,17 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
           {
           case LVN_ITEMCHANGED:   //включение-отключение кнопок передачи
             {
-              if (_localPath == L"Мой компьютер" || ListView_GetSelectionMark(_localList) < 0)
+              if (_client < 0)
+                break;
+
+              LPNMLISTVIEW item = (LPNMLISTVIEW)lParam;
+
+              if (_localPath == L"Мой компьютер" || (!ListView_GetSelectedCount(_localList) && !item->uNewState))
                 EnableWindow(_buttonLoad, false);
               else
                 EnableWindow(_buttonLoad, true);
-              
-              if (_remotePath == L"Мой компьютер" || ListView_GetSelectionMark(_remoteList) < 0)
+
+              if (_remotePath == L"Мой компьютер" || (!ListView_GetSelectedCount(_remoteList) && !item->uNewState))
                 EnableWindow(_buttonDownload, false);
               else
                 EnableWindow(_buttonDownload, true);
@@ -153,9 +158,15 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
               wchar_t file[MAX_PATH];
               ListView_GetItemText(nmia->hdr.hwndFrom, nmia->iItem, 0, file, MAX_PATH);
               if (nmia->hdr.hwndFrom == _localList)
+              {
+                EnableWindow(_buttonLoad, false);
                 OpenLocalFile(file);
+              }
               else
+              {
+                EnableWindow(_buttonDownload, false);
                 OpenRemoteFile(file);
+              }
             }
             break;
           case LVN_KEYDOWN:     //нажали клавишу в проводнике
