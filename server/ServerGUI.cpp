@@ -19,7 +19,8 @@ ServerGUI::ServerGUI(HINSTANCE hInstance) :
   _localPath(L""),
   _remotePath(L""),
   _stopThreads(false),
-  _client(-1)
+  _client(-1),
+  _thParam(NONE)
 {
   SetErrorMode(SEM_NOOPENFILEERRORBOX|SEM_FAILCRITICALERRORS|SEM_NOALIGNMENTFAULTEXCEPT);
   INITCOMMONCONTROLSEX icex;
@@ -46,7 +47,19 @@ void ServerGUI::DoModal()
 void ServerGUI::ServerThreadFunc(LPARAM param)
 {
   ServerGUI* server = (ServerGUI*)param;
-  server->ServerFunc();
+  switch (server->_thParam)
+  {
+  case START_SERVER:
+    server->ServerFunc();
+    break;
+  case LOAD_FILE:
+    server->LoadFile();
+    break;
+  case DOWNLOAD_FILE:
+    server->DownloadFile();
+    break;
+  }
+  server->_thParam = NONE;
 }
 
 void ServerGUI::ServerFunc()
@@ -99,6 +112,7 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
     {
       ShowWindow(_hWnd, SW_SHOW);
       InitDialog();
+      _thParam = START_SERVER;
       _threadPool.push_back(CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&ServerGUI::ServerThreadFunc, this, 0, 0));
     }
     break;
@@ -255,6 +269,7 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
         {
           WaitForSingleObject(_mutex, INFINITE);
           _client = ListBox_GetCurSel(_listClients);
+          ReleaseMutex(_mutex);
           if (_client >= 0)
           {
             if (_clients[_client]->ConnectCommand())
@@ -262,12 +277,13 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             else
             {
               _clients.erase(_clients.begin() + _client);
+              WaitForSingleObject(_mutex, INFINITE);
               ListBox_DeleteString(_listClients, _client);
               SetWindowText(_remotePathEdit, L"");
               ListView_DeleteAllItems(_remoteList);
+              ReleaseMutex(_mutex);
             }
           }
-          ReleaseMutex(_mutex);
           break;
         }
       }
@@ -307,10 +323,8 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
           if (sel < 0)
             break;
 
-          wchar_t filename[MAX_PATH];
-          ListView_GetItemText(_localList, sel, 0, filename, MAX_PATH);
-
-          LoadFile(filename);
+          _thParam = LOAD_FILE;
+          _threadPool.push_back(CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&ServerGUI::ServerThreadFunc, this, 0, 0));
           break;
         }
       case IDC_DOWNLOAD:
@@ -319,10 +333,8 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
           if (sel < 0)
             break;
 
-          wchar_t filename[MAX_PATH];
-          ListView_GetItemText(_remoteList, sel, 0, filename, MAX_PATH);
-
-          DownloadFile(filename);
+          _thParam = DOWNLOAD_FILE;
+          _threadPool.push_back(CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&ServerGUI::ServerThreadFunc, this, 0, 0));
           break;
         }
       }
@@ -529,15 +541,17 @@ void ServerGUI::OpenRemoteFile(const wchar_t* path, bool openfile)
   }
 }
 
-void ServerGUI::LoadFile(const wchar_t* localFile)
+void ServerGUI::LoadFile()
 {
+  WaitForSingleObject(_mutex, INFINITE);
+  wchar_t localFile[MAX_PATH];
+  ListView_GetItemText(_localList, ListView_GetSelectionMark(_localList), 0, localFile, MAX_PATH);
   DWORD readBytes = -1;
   DWORD sizeRead = 0; 
   HANDLE file = CreateFile((_localPath + L"\\" + localFile).c_str(), GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
   if (file != INVALID_HANDLE_VALUE)
   {
     DWORD size = GetFileSize(file, 0);
-    WaitForSingleObject(_mutex, INFINITE);
     if (_client >=0 && size > 0 &&
       _clients[_client]->RecvFileCommand((_remotePath + L"\\" + localFile).c_str()) &&
       _clients[_client]->SendData((char*)&size, sizeof(DWORD)) > 0)
@@ -567,24 +581,26 @@ void ServerGUI::LoadFile(const wchar_t* localFile)
       if (command == DONE)
       {
         MessageBox(0, L"Файл успешно загружен", L"Закачка завершена", MB_OK);            
+        SHGetFileInfo(localFile, 0, &_sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES);
         AddListItem(_remoteList, localFile);
       }
 
     SendMessage(_progressBar, PBM_SETPOS, 0, 0);
-    ReleaseMutex(_mutex);
-
     CloseHandle(file);
   }
+  ReleaseMutex(_mutex);
 }
 
-void ServerGUI::DownloadFile(const wchar_t* remoteFile)
+void ServerGUI::DownloadFile()
 {
+  WaitForSingleObject(_mutex, INFINITE);
+  wchar_t remoteFile[MAX_PATH];
+  ListView_GetItemText(_remoteList, ListView_GetSelectionMark(_remoteList), 0, remoteFile, MAX_PATH);
   DWORD sizeRead = 0;
   DWORD size = 0;
   HANDLE file = CreateFile((_localPath + L"\\" + remoteFile).c_str(), GENERIC_WRITE, 0, 0, CREATE_ALWAYS, 0, 0);
   if (file != INVALID_HANDLE_VALUE)
   {
-    WaitForSingleObject(_mutex, INFINITE);
     if (_client >= 0 && _clients[_client]->SendFileCommand((_remotePath + L"\\" + remoteFile).c_str()) &&
       _clients[_client]->RecvData((char*)&size, sizeof(DWORD)) > 0 &&
       size > 0)
@@ -619,13 +635,13 @@ void ServerGUI::DownloadFile(const wchar_t* remoteFile)
         if (command == DONE)
         {
           MessageBox(0, L"Файл успешно закачен", L"Закачка завершена", MB_OK);            
+          SHGetFileInfo(remoteFile, 0, &_sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_USEFILEATTRIBUTES);
           AddListItem(_localList, remoteFile);
         }
     }
 
     SendMessage(_progressBar, PBM_SETPOS, 0, 0);
-    ReleaseMutex(_mutex);
-
     CloseHandle(file);
   }
+  ReleaseMutex(_mutex);
 }

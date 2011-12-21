@@ -19,6 +19,15 @@ public:
   void DoModal();
 
 protected:
+
+  enum threadParam
+  {
+    NONE,
+    START_SERVER,
+    LOAD_FILE,
+    DOWNLOAD_FILE
+  };
+
   static void ServerThreadFunc(LPARAM param);
   void ServerFunc();
 
@@ -29,8 +38,8 @@ protected:
   void AddListItem(HWND list, const wchar_t* text);
   void OpenLocalFile(const wchar_t* path, bool openfile = true);
   void OpenRemoteFile(const wchar_t* path, bool openfile = true);
-  void LoadFile(const wchar_t* localFile);
-  void DownloadFile(const wchar_t* remoteFile);
+  void LoadFile();
+  void DownloadFile();
 
   bool                _stopThreads;
   HWND                _hWnd;
@@ -46,6 +55,7 @@ protected:
   std::wstring        _localPath, _remotePath;
   HANDLE              _mutex;
   int                 _client;
+  int                 _thParam;
 
   SHFILEINFO          _sfi;
   HIMAGELIST          _hil;

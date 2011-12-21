@@ -65,8 +65,8 @@ void CommandSocket::RecvProc()
       }
     case RECV_FILE:
       {
-        int lengthFilename = 0;
-        if (TCPSocket::RecvData((char*)&lengthFilename, sizeof(int)) < 0)
+        DWORD lengthFilename = 0;
+        if (TCPSocket::RecvData((char*)&lengthFilename, sizeof(DWORD)) < 0)
           break;
 
         _filename = new wchar_t[lengthFilename];
@@ -79,8 +79,8 @@ void CommandSocket::RecvProc()
       }
     case SEND_FILE:
       {
-        int lengthFilename = 0;
-        if (TCPSocket::RecvData((char*)&lengthFilename, sizeof(int)) < 0)
+        DWORD lengthFilename = 0;
+        if (TCPSocket::RecvData((char*)&lengthFilename, sizeof(DWORD)) < 0)
           break;
 
         _filename = new wchar_t[lengthFilename];
@@ -102,7 +102,7 @@ void CommandSocket::RecvProc()
           break;
         
         DWORD writeBytes = 0;
-        HANDLE fileBuffer = CreateFile(L"buffer.tmp", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, 0);
+        HANDLE fileBuffer = CreateFile(L"cbuffer.tmp", GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_HIDDEN, 0);
         if (fileBuffer != INVALID_HANDLE_VALUE)
         {
           if (wcscmp(folder, L"Мой компьютер") == 0)
@@ -155,9 +155,9 @@ void CommandSocket::RecvProc()
 
         if (command == DONE)
         {
-          if (TCPSocket::SendFile(L"buffer.tmp") < 0)
+          if (TCPSocket::SendFile(L"cbuffer.tmp") < 0)
             command = FAIL;
-          DeleteFile(L"buffer.tmp");
+          DeleteFile(L"cbuffer.tmp");
         }
         else
         {
@@ -215,8 +215,8 @@ bool CommandSocket::SendFileCommand(const wchar_t* filename)
   int command = SEND_FILE;
   if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
     return false;
-  int lengthFilename = wcslen(filename) + 1;
-  if (TCPSocket::SendData((char*)&lengthFilename, sizeof(int)) < 0)
+  DWORD lengthFilename = wcslen(filename) + 1;
+  if (TCPSocket::SendData((char*)&lengthFilename, sizeof(DWORD)) < 0)
     return false;
   if (TCPSocket::SendData((char*)filename, lengthFilename  * sizeof(wchar_t)) < 0)
     return false;
@@ -229,8 +229,8 @@ bool CommandSocket::RecvFileCommand(const wchar_t* filename)
   int command = RECV_FILE;
   if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
     return false;
-  int lengthFilename = wcslen(filename) + 1;
-  if (TCPSocket::SendData((char*)&lengthFilename, sizeof(int)) < 0)
+  DWORD lengthFilename = wcslen(filename) + 1;
+  if (TCPSocket::SendData((char*)&lengthFilename, sizeof(DWORD)) < 0)
     return false;
   if (TCPSocket::SendData((char*)filename, lengthFilename * sizeof(wchar_t)) < 0)
     return false;
@@ -265,7 +265,7 @@ bool CommandSocket::GetFolderCommand(const wchar_t* folder, std::vector<FolderSt
   if(command == DONE)
   {
     int num = 0;
-    if (TCPSocket::RecvFile(L"buffer.tmp") < 0)
+    if (TCPSocket::RecvFile(L"sbuffer.tmp") < 0)
       return false;
 
     files.clear();
@@ -274,7 +274,7 @@ bool CommandSocket::GetFolderCommand(const wchar_t* folder, std::vector<FolderSt
     wchar_t* name = new wchar_t[MAX_PATH];
     DWORD size = 0;
     DWORD attributes = 0;
-    HANDLE fileBuffer = CreateFile(L"buffer.tmp", GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+    HANDLE fileBuffer = CreateFile(L"sbuffer.tmp", GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
     int sizeFile = GetFileSize(fileBuffer, 0);
     if (fileBuffer != INVALID_HANDLE_VALUE)
     {
@@ -295,7 +295,7 @@ bool CommandSocket::GetFolderCommand(const wchar_t* folder, std::vector<FolderSt
       CloseHandle(fileBuffer);
     }
 
-    DeleteFile(L"buffer.tmp");
+    DeleteFile(L"sbuffer.tmp");
   }
   
   if (TCPSocket::RecvData((char*)&command, sizeof(int)) < 0)
