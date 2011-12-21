@@ -154,15 +154,20 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
 
               LPNMLISTVIEW item = (LPNMLISTVIEW)lParam;
 
-              if (_localPath == L"Мой компьютер" || (!ListView_GetSelectedCount(_localList) && !item->uNewState))
-                EnableWindow(_buttonLoad, false);
+              if (item->hdr.hwndFrom == _localList)
+              {
+                if (_localPath == L"Мой компьютер" || (!ListView_GetSelectedCount(_localList) && !item->uNewState))
+                  EnableWindow(_buttonLoad, false);
+                else
+                  EnableWindow(_buttonLoad, true);
+              }
               else
-                EnableWindow(_buttonLoad, true);
-
-              if (_remotePath == L"Мой компьютер" || (!ListView_GetSelectedCount(_remoteList) && !item->uNewState))
-                EnableWindow(_buttonDownload, false);
-              else
-                EnableWindow(_buttonDownload, true);
+              {
+                if (_remotePath == L"Мой компьютер" || (!ListView_GetSelectedCount(_remoteList) && !item->uNewState))
+                  EnableWindow(_buttonDownload, false);
+                else
+                  EnableWindow(_buttonDownload, true);
+              }
 
               break;
             }
@@ -173,13 +178,15 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
               ListView_GetItemText(nmia->hdr.hwndFrom, nmia->iItem, 0, file, MAX_PATH);
               if (nmia->hdr.hwndFrom == _localList)
               {
-                EnableWindow(_buttonLoad, false);
                 OpenLocalFile(file);
+                if (!ListView_GetSelectedCount(_localList))
+                  EnableWindow(_buttonLoad, false);
               }
               else
               {
-                EnableWindow(_buttonDownload, false);
                 OpenRemoteFile(file);
+                if (!ListView_GetSelectedCount(_remoteList))
+                  EnableWindow(_buttonDownload, false);
               }
             }
             break;
