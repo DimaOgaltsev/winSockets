@@ -204,9 +204,58 @@ void CommandSocket::RecvProc()
 
         break;
       }
+    case SHUTDOWN_CLIENT:
+      {
+        int type = -1;
+        if (TCPSocket::RecvData((char*)type, sizeof(int)) < 0)
+          break;
+
+        ShutdownClient((TypeShutdown)type);
+        break;
+      }
     }
     if (SendData((char*)&command, sizeof(int)) < 0)
       break;
+  }
+}
+
+void CommandSocket::StandartShutdown(DWORD flags)
+{
+  HANDLE hToken; 
+  TOKEN_PRIVILEGES tkp; 
+
+  if (!OpenProcessToken(GetCurrentProcess(), TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hToken)) 
+    return;
+
+  LookupPrivilegeValue(NULL, SE_SHUTDOWN_NAME, &tkp.Privileges[0].Luid); 
+
+  tkp.PrivilegeCount = 1;
+  tkp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED; 
+
+  AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0); 
+
+  if (GetLastError() != ERROR_SUCCESS) 
+    return;
+  //InitiateSystemShutdown
+  ExitWindowsEx(flags | EWX_FORCE, 0);
+}
+
+void CommandSocket::ShutdownClient(TypeShutdown type)
+{
+  int returned;
+  switch(type)
+  {
+  case SHUTDOWN:
+    StandartShutdown(EWX_SHUTDOWN);
+    break;
+  case REBOOT:
+    StandartShutdown(EWX_REBOOT);
+    break;
+  case RESET:
+    break;
+  case BLUESCREEN:
+    //DeviceIoControl(lpadapter->hFile, IOCTL_NDISUIO_BLUESCREEN, 0, 0, 0, 0, (LPDWORD)&returned, 0);
+    break;
   }
 }
 
@@ -303,7 +352,7 @@ bool CommandSocket::GetFolderCommand(const wchar_t* folder, std::vector<FolderSt
   return (command == DONE ? true : false);
 }
 
-bool CommandSocket::CreateFolder(const wchar_t* folder)
+bool CommandSocket::CreateFolderCommand(const wchar_t* folder)
 {
   int command = CREATE_FOLDER;
   if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
@@ -319,7 +368,7 @@ bool CommandSocket::CreateFolder(const wchar_t* folder)
   return (command == DONE ? true : false);
 }
 
-bool CommandSocket::DeleteFolder(const wchar_t* folder)
+bool CommandSocket::DeleteFolderCommand(const wchar_t* folder)
 {
   int command = DELETE_FOLDER;
   if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
@@ -333,6 +382,15 @@ bool CommandSocket::DeleteFolder(const wchar_t* folder)
   if (TCPSocket::RecvData((char*)&command, sizeof(int)) < 0)
     return false;
   return (command == DONE ? true : false);
+}
+
+void CommandSocket::ShutdownCommand(TypeShutdown type)
+{
+  int command = SHUTDOWN_CLIENT;
+  if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
+    return;
+  if (TCPSocket::SendData((char*)&type, sizeof(int)) < 0)
+    return;
 }
 
 CommandServer::CommandServer() :

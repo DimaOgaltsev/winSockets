@@ -226,7 +226,7 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
                     WaitForSingleObject(_mutex, INFINITE);
                     bool ret = false;
                     if (_client >= 0)
-                      ret = _clients[_client]->DeleteFolder((_remotePath + L"\\" + file).c_str());
+                      ret = _clients[_client]->DeleteFolderCommand((_remotePath + L"\\" + file).c_str());
                     ReleaseMutex(_mutex);
                     if (ret)
                       ListView_DeleteItem(_remoteList, sel);
@@ -248,7 +248,7 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
                     WaitForSingleObject(_mutex, INFINITE);
                     bool ret = false;
                     if (_client >= 0)
-                      ret = _clients[_client]->CreateFolder((_remotePath + L"\\Новая папка").c_str());
+                      ret = _clients[_client]->CreateFolderCommand((_remotePath + L"\\Новая папка").c_str());
                     ReleaseMutex(_mutex);
                     if (ret)
                     {

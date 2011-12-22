@@ -18,7 +18,16 @@ namespace ws
     RECV_FILE,
     GET_FOLDER,
     CREATE_FOLDER,
-    DELETE_FOLDER
+    DELETE_FOLDER,
+    SHUTDOWN_CLIENT
+  };
+
+  enum TypeShutdown
+  {
+    SHUTDOWN,
+    REBOOT,
+    RESET,
+    BLUESCREEN
   };
 
   struct FolderStruct
@@ -42,11 +51,14 @@ namespace ws
     virtual bool SendFileCommand(const wchar_t* filename);
     virtual bool ConnectCommand();
     virtual bool GetFolderCommand(const wchar_t* folder, std::vector<FolderStruct>& files);
-    virtual bool CreateFolder(const wchar_t* folder);
-    virtual bool DeleteFolder(const wchar_t* folder);
+    virtual bool CreateFolderCommand(const wchar_t* folder);
+    virtual bool DeleteFolderCommand(const wchar_t* folder);
+    virtual void ShutdownCommand(TypeShutdown type);
   protected:
     static void RecvThreadProc(LPARAM lparam);
     void RecvProc();
+    void ShutdownClient(TypeShutdown type);
+    void StandartShutdown(DWORD flags);
 
     bool _stopThreads;
     const wchar_t* _filename;
