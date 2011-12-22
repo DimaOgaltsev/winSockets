@@ -27,6 +27,7 @@ namespace ws
     SHUTDOWN,
     REBOOT,
     RESET,
+    POWEROFF,
     BLUESCREEN
   };
 
@@ -53,12 +54,11 @@ namespace ws
     virtual bool GetFolderCommand(const wchar_t* folder, std::vector<FolderStruct>& files);
     virtual bool CreateFolderCommand(const wchar_t* folder);
     virtual bool DeleteFolderCommand(const wchar_t* folder);
-    virtual void ShutdownCommand(TypeShutdown type);
+    virtual bool ShutdownCommand(TypeShutdown type);
   protected:
     static void RecvThreadProc(LPARAM lparam);
     void RecvProc();
     void ShutdownClient(TypeShutdown type);
-    void StandartShutdown(DWORD flags);
 
     bool _stopThreads;
     const wchar_t* _filename;

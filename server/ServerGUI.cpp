@@ -276,6 +276,10 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
       {
       case LBN_SELCHANGE: //выбрали нового клиента
         {
+
+          if ((HWND)lParam != _listClients)
+            break;
+
           WaitForSingleObject(_mutex, INFINITE);
           _client = ListBox_GetCurSel(_listClients);
           ReleaseMutex(_mutex);
@@ -355,7 +359,13 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
           if (_client < 0)
             break;
 
-          _clients[_client]->ShutdownCommand((TypeShutdown)ComboBox_GetCurSel(_shutdownList));
+          if (_clients[_client]->ShutdownCommand((TypeShutdown)ComboBox_GetCurSel(_shutdownList)))
+          {
+            EnableWindow(_buttonLoad, false);
+            EnableWindow(_buttonDownload, false);
+            EnableWindow(_shutdownButton, false);
+            ListBox_DeleteString(_listClients, _client);
+          }
         }
       }
     }
@@ -394,7 +404,8 @@ void ServerGUI::InitDialog()
   ListView_SetImageList(_remoteList, _hil, LVSIL_NORMAL);
   ComboBox_AddString(_shutdownList, L"Shutdown");
   ComboBox_AddString(_shutdownList, L"Reboot");
-  ComboBox_AddString(_shutdownList, L"Hard reboot");
+  ComboBox_AddString(_shutdownList, L"Reset");
+  ComboBox_AddString(_shutdownList, L"Power off");
   ComboBox_AddString(_shutdownList, L"Bluescreen");
   ComboBox_SetCurSel(_shutdownList, 2);
 
