@@ -52,6 +52,7 @@ protected:
   HWND                _localPathEdit, _remotePathEdit;
   HWND                _buttonLoad, _buttonDownload;
   HWND                _progressBar;
+  HWND                _shutdownButton, _shutdownList;
   std::wstring        _localPath, _remotePath;
   HANDLE              _mutex;
   int                 _client;

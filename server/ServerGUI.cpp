@@ -16,6 +16,8 @@ ServerGUI::ServerGUI(HINSTANCE hInstance) :
   _buttonLoad(NULL),
   _buttonDownload(NULL),
   _progressBar(NULL),
+  _shutdownButton(NULL),
+  _shutdownList(NULL),
   _localPath(L""),
   _remotePath(L""),
   _stopThreads(false),
@@ -280,9 +282,13 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
           if (_client >= 0)
           {
             if (_clients[_client]->ConnectCommand())
+            {
+              EnableWindow(_shutdownButton, true);
               OpenRemoteFile(L"Мой компьютер");
+            }
             else
             {
+              EnableWindow(_shutdownButton, false);
               _clients.erase(_clients.begin() + _client);
               WaitForSingleObject(_mutex, INFINITE);
               ListBox_DeleteString(_listClients, _client);
@@ -344,6 +350,13 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
           _threadPool.push_back(CreateThread(0, 0, (LPTHREAD_START_ROUTINE)&ServerGUI::ServerThreadFunc, this, 0, 0));
           break;
         }
+      case IDC_SHUTDOWN:
+        {
+          if (_client < 0)
+            break;
+
+          _clients[_client]->ShutdownCommand((TypeShutdown)ComboBox_GetCurSel(_shutdownList));
+        }
       }
     }
     break;
@@ -364,11 +377,14 @@ void ServerGUI::InitDialog()
   _buttonLoad = GetDlgItem(_hWnd, IDC_LOAD);
   _buttonDownload = GetDlgItem(_hWnd, IDC_DOWNLOAD);
   _progressBar = GetDlgItem(_hWnd, IDC_PROGRESS);
+  _shutdownButton = GetDlgItem(_hWnd, IDC_SHUTDOWN);
+  _shutdownList = GetDlgItem(_hWnd, IDC_COMBO_SHUTDOWN);
 
   ListView_DeleteAllItems(_localList);
   ListView_DeleteAllItems(_remoteList);
   EnableWindow(_buttonLoad, false);
   EnableWindow(_buttonDownload, false);
+  EnableWindow(_shutdownButton, false);
 
   SendMessage(_progressBar, PBM_SETRANGE32, 0, 100);
   SendMessage(_progressBar, PBM_SETSTEP, 1, 0);
@@ -376,6 +392,11 @@ void ServerGUI::InitDialog()
   ListBox_ResetContent(_listClients);
   ListView_SetImageList(_localList, _hil, LVSIL_NORMAL);
   ListView_SetImageList(_remoteList, _hil, LVSIL_NORMAL);
+  ComboBox_AddString(_shutdownList, L"Shutdown");
+  ComboBox_AddString(_shutdownList, L"Reboot");
+  ComboBox_AddString(_shutdownList, L"Hard reboot");
+  ComboBox_AddString(_shutdownList, L"Bluescreen");
+  ComboBox_SetCurSel(_shutdownList, 2);
 
   OpenLocalFile(L"Мой компьютер", false);
 }
