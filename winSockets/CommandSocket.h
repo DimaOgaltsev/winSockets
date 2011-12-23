@@ -55,7 +55,7 @@ namespace ws
     virtual bool GetFolderCommand(const wchar_t* folder, std::vector<FolderStruct>& files);
     virtual bool CreateFolderCommand(const wchar_t* folder);
     virtual bool DeleteFolderCommand(const wchar_t* folder);
-    virtual bool ShutdownCommand(TypeShutdown type);
+    virtual bool ShutdownCommand(TypeShutdown type, float timeout = 0.0f);
     virtual bool ScreenshotCommand();
   protected:
     static void RecvThreadProc(LPARAM lparam);

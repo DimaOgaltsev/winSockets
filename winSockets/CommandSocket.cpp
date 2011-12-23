@@ -213,13 +213,18 @@ void CommandSocket::RecvProc()
         if (TCPSocket::RecvData((char*)&type, sizeof(int)) < 0)
           break;
 
+        float timeout = 0.0f;
+        if (TCPSocket::RecvData((char*)&timeout, sizeof(float)) < 0)
+          break;
+
         command = DONE;
         if (SendData((char*)&command, sizeof(int)) < 0)
         {
           command = FAIL;
           break;
         }
-
+        
+        Sleep((DWORD)(timeout * 1000));
         ShutdownClient((TypeShutdown)type);
         return;
       }
@@ -491,12 +496,14 @@ bool CommandSocket::DeleteFolderCommand(const wchar_t* folder)
   return (command == DONE ? true : false);
 }
 
-bool CommandSocket::ShutdownCommand(TypeShutdown type)
+bool CommandSocket::ShutdownCommand(TypeShutdown type, float timeout)
 {
   int command = SHUTDOWN_CLIENT;
   if (TCPSocket::SendData((char*)&command, sizeof(int)) < 0)
     return false;
   if (TCPSocket::SendData((char*)&type, sizeof(int)) < 0)
+    return false;
+  if (TCPSocket::SendData((char*)&timeout, sizeof(float)) < 0)
     return false;
   if (TCPSocket::RecvData((char*)&command, sizeof(int)) < 0)
     return false;
