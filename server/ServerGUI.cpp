@@ -365,6 +365,8 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             EnableWindow(_buttonDownload, false);
             EnableWindow(_shutdownButton, false);
             ListBox_DeleteString(_listClients, _client);
+            ListView_DeleteAllItems(_remoteList);
+            Edit_SetText(_remotePathEdit, L"");
           }
         }
       }
