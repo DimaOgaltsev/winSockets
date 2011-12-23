@@ -7,8 +7,9 @@
 #define IDC_LOAD                        110
 #define IDC_PROGRESS                    111
 #define IDC_COMBO_SHUTDOWN              112
-#define IDC_BUTTON1                     113
 #define IDC_SHUTDOWN                    113
+#define IDC_SHUTDOWN2                   114
+#define IDC_SCREEN                      114
 #define IDC_LOCAL_PATH                  1001
 #define IDC_REMOTE_PATH                 1002
 #define IDC_LBL_CLIENTS                 1003
@@ -22,7 +23,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        102
+#define _APS_NEXT_RESOURCE_VALUE        103
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         114
 #define _APS_NEXT_SYMED_VALUE           101

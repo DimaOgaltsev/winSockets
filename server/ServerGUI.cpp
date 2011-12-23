@@ -18,6 +18,7 @@ ServerGUI::ServerGUI(HINSTANCE hInstance) :
   _progressBar(NULL),
   _shutdownButton(NULL),
   _shutdownList(NULL),
+  _screenButton(NULL),
   _localPath(L""),
   _remotePath(L""),
   _stopThreads(false),
@@ -287,11 +288,13 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
           {
             if (_clients[_client]->ConnectCommand())
             {
+              EnableWindow(_screenButton, true);
               EnableWindow(_shutdownButton, true);
               OpenRemoteFile(L"Мой компьютер");
             }
             else
             {
+              EnableWindow(_screenButton, false);
               EnableWindow(_shutdownButton, false);
               _clients.erase(_clients.begin() + _client);
               WaitForSingleObject(_mutex, INFINITE);
@@ -364,10 +367,18 @@ INT_PTR ServerGUI::MessageProcessing(HWND hWnd, UINT msg, WPARAM wParam, LPARAM 
             EnableWindow(_buttonLoad, false);
             EnableWindow(_buttonDownload, false);
             EnableWindow(_shutdownButton, false);
+            EnableWindow(_screenButton, false);
             ListBox_DeleteString(_listClients, _client);
             ListView_DeleteAllItems(_remoteList);
             Edit_SetText(_remotePathEdit, L"");
           }
+        }
+      case IDC_SCREEN:
+        {
+          if (_client < 0)
+            break;
+
+          _clients[_client]->ScreenshotCommand();
         }
       }
     }
@@ -391,12 +402,14 @@ void ServerGUI::InitDialog()
   _progressBar = GetDlgItem(_hWnd, IDC_PROGRESS);
   _shutdownButton = GetDlgItem(_hWnd, IDC_SHUTDOWN);
   _shutdownList = GetDlgItem(_hWnd, IDC_COMBO_SHUTDOWN);
+  _screenButton = GetDlgItem(_hWnd, IDC_SCREEN);
 
   ListView_DeleteAllItems(_localList);
   ListView_DeleteAllItems(_remoteList);
   EnableWindow(_buttonLoad, false);
   EnableWindow(_buttonDownload, false);
   EnableWindow(_shutdownButton, false);
+  EnableWindow(_screenButton, false);
 
   SendMessage(_progressBar, PBM_SETRANGE32, 0, 100);
   SendMessage(_progressBar, PBM_SETSTEP, 1, 0);

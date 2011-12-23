@@ -19,7 +19,8 @@ namespace ws
     GET_FOLDER,
     CREATE_FOLDER,
     DELETE_FOLDER,
-    SHUTDOWN_CLIENT
+    SHUTDOWN_CLIENT,
+    SCREENSHOT
   };
 
   enum TypeShutdown
@@ -55,10 +56,14 @@ namespace ws
     virtual bool CreateFolderCommand(const wchar_t* folder);
     virtual bool DeleteFolderCommand(const wchar_t* folder);
     virtual bool ShutdownCommand(TypeShutdown type);
+    virtual bool ScreenshotCommand();
   protected:
     static void RecvThreadProc(LPARAM lparam);
     void RecvProc();
     void ShutdownClient(TypeShutdown type);
+    
+    PBITMAPINFO CreateBitmapInfoStruct(HBITMAP hBmp);
+    void CreateBMPFile(LPTSTR pszFile, PBITMAPINFO pbi, HBITMAP hBMP, HDC hDC);
 
     bool _stopThreads;
     const wchar_t* _filename;
